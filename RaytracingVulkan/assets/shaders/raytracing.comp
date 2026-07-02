@@ -26,6 +26,8 @@ struct triangle {
     vec4 n1;
     vec4 n2;
     bool precalculatedNormals;
+    vec2 pad1;
+    int materialIndex;
 };
 
 layout(binding = 3, std140) readonly buffer Triangles{
@@ -158,6 +160,10 @@ vec3 PerPixel(ray ray)
         {
             if (hitTriangle(triangles[i], ray, near, closestT, localPayload))
             {
+                if (triangles[i].materialIndex != -1){
+                    color = materialBase.Ambient;
+                }
+                
                 hit = true;
                 closestT = localPayload.hitDistance;
                 payload = localPayload;

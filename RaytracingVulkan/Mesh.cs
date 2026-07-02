@@ -41,7 +41,7 @@ public class Mesh
             var v0 = Vertices[Indices[i]];
             var v1 = Vertices[Indices[i + 1]];
             var v2 = Vertices[Indices[i + 2]];
-            triangles.Add(new Triangle(v0.Position, v1.Position, v2.Position, v0.Normal, v1.Normal, v2.Normal));
+            triangles.Add(new Triangle(v0.Position, v1.Position, v2.Position, v0.Normal, v1.Normal, v2.Normal, 0));
         }
         
         return triangles.ToArray();

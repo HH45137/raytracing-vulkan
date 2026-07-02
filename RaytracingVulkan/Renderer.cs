@@ -199,7 +199,7 @@ public sealed unsafe class Renderer : IDisposable
         {
             var _materials = new MaterialBase
             {
-                Ambient = new Vector3(1.0f, 0.0f, 0.0f),
+                Ambient = new Vector3(0.0f, 0.0f, 1.0f),
                 Emissive = 0.0f,
                 Opacity = 1.0f,
                 IndexOfRefraction = 0.0f
