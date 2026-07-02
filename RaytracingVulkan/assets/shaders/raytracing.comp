@@ -40,6 +40,13 @@ layout(binding = 4, std140) readonly buffer Spheres{
     sphere spheres[];
 };
 
+layout(binding = 5, std140) uniform MaterialBase {
+    vec3 Ambient;
+    float Emissive;
+    float Opacity;
+    float IndexOfRefraction;
+} materialBase;
+
 struct ray {
     vec3 origin;
     vec3 direction;

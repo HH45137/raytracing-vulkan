@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using RaytracingVulkan.Material;
 using RaytracingVulkan.Memory;
 using RaytracingVulkan.Primitives;
 using Silk.NET.Vulkan;
@@ -30,10 +31,12 @@ public sealed unsafe class Renderer : IDisposable
     private readonly VkBuffer _sceneParameterBuffer;
     private readonly VkBuffer _triangleBuffer;
     private readonly VkBuffer _sphereBuffer;
+    private readonly VkBuffer _materialBuffer;
     
     //pointers
     private void* _mappedData;
     private readonly void* _mappedSceneParameterData;
+    private readonly void* _materialData;
 
     //scene data
     private uint _viewportWidth;
@@ -80,8 +83,9 @@ public sealed unsafe class Renderer : IDisposable
         var binding2 = binding0 with {Binding = 2};
         var binding3 = binding0 with {Binding = 3, DescriptorType = DescriptorType.StorageBuffer};
         var binding4 = binding0 with {Binding = 4, DescriptorType = DescriptorType.StorageBuffer};
+        var binding5 = binding0 with {Binding = 5, DescriptorType = DescriptorType.UniformBuffer};
 
-        _setLayout = _context.CreateDescriptorSetLayout(new[] {binding0, binding1, binding2, binding3, binding4});
+        _setLayout = _context.CreateDescriptorSetLayout(new[] {binding0, binding1, binding2, binding3, binding4, binding5});
         _descriptorSet = _context.AllocateDescriptorSet(_descriptorPool, _setLayout);
 
         var shaderModule = _context.LoadShaderModule("./assets/shaders/raytracing.comp.spv");
@@ -90,6 +94,23 @@ public sealed unsafe class Renderer : IDisposable
         _sceneParameterBuffer = new VkBuffer(_context, (uint) sizeof(SceneParameters), BufferUsageFlags.UniformBufferBit, MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit);
         _sceneParameterBuffer.MapMemory(ref _mappedSceneParameterData);
         _context.UpdateDescriptorSetBuffer(ref _descriptorSet, _sceneParameterBuffer.GetBufferInfo(), DescriptorType.UniformBuffer, 1);
+
+        // Materials Buffer
+        {
+            _materialBuffer = new VkBuffer(
+                _context,
+                (uint)sizeof(MaterialBase),
+                BufferUsageFlags.UniformBufferBit,
+                MemoryPropertyFlags.HostVisibleBit | MemoryPropertyFlags.HostCoherentBit
+            );
+            _materialBuffer.MapMemory(ref _materialData);
+            _context.UpdateDescriptorSetBuffer(
+                ref _descriptorSet,
+                _materialBuffer.GetBufferInfo(),
+                DescriptorType.UniformBuffer,
+                5
+            );
+        }
 
         _triangleBuffer = new VkBuffer(_context, (uint) (sizeof(Triangle) * _triangles.Length), BufferUsageFlags.StorageBufferBit | BufferUsageFlags.TransferDstBit, MemoryPropertyFlags.DeviceLocalBit);
         
@@ -173,6 +194,19 @@ public sealed unsafe class Renderer : IDisposable
             Time = (uint) DateTime.Now.Ticks
         };
         System.Buffer.MemoryCopy(&parameters, _mappedSceneParameterData, sizeof(SceneParameters), sizeof(SceneParameters));
+
+        // Materials Buffer
+        {
+            var _materials = new MaterialBase
+            {
+                Ambient = new Vector3(1.0f, 0.0f, 0.0f),
+                Emissive = 0.0f,
+                Opacity = 1.0f,
+                IndexOfRefraction = 0.0f
+            };
+
+            System.Buffer.MemoryCopy(&_materials, _materialData, sizeof(MaterialBase), sizeof(MaterialBase));
+        }
     }
 
     public void CopyDataTo(IntPtr address)
@@ -214,6 +248,7 @@ public sealed unsafe class Renderer : IDisposable
         _sceneParameterBuffer.Dispose();
         _triangleBuffer.Dispose();
         _sphereBuffer.Dispose();
+        _materialBuffer.Dispose();
         _vkBuffer?.Dispose();
         _vkImage?.Dispose();
 
