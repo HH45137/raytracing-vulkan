@@ -79,7 +79,10 @@ public sealed unsafe partial class VkContext : IDisposable
         foreach (var gpu in devices)
         {
             var properties = _vk.GetPhysicalDeviceProperties(gpu);
-            if (properties.DeviceType == PhysicalDeviceType.DiscreteGpu) _physicalDevice = gpu;
+            if (properties.DeviceType == PhysicalDeviceType.DiscreteGpu && properties.ApiVersion == appInfo.ApiVersion)
+            {
+                _physicalDevice = gpu;
+            }
         }
         if (_physicalDevice.Handle == 0) _physicalDevice = devices.First();
         var deviceProps = _vk.GetPhysicalDeviceProperties(_physicalDevice);
