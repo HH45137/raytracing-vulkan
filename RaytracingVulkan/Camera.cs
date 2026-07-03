@@ -6,6 +6,7 @@ public class Camera
 {
     public Vector3 Position;
     public Vector3 Forward;
+    public Vector3 LookPoint;
     
     public Matrix4x4 Projection;
     public Matrix4x4 View;
@@ -21,6 +22,7 @@ public class Camera
 
     public Camera(float verticalFovDegrees, float nearClip, float farClip)
     {
+        LookPoint = new Vector3(0, 0.3f, 0);
         Forward = -Vector3.UnitZ;
         Position = Vector3.Zero;
         _verticalFov = verticalFovDegrees * MathF.PI / 180;
@@ -39,7 +41,7 @@ public class Camera
 
     public void RecalculateView()
     {
-        View = Matrix4x4.CreateLookAt(Position, Position + Forward, Vector3.UnitY);
+        View = Matrix4x4.CreateLookAt(Position, LookPoint, Vector3.UnitY);
         Matrix4x4.Invert(View, out InverseView);
     }
 
